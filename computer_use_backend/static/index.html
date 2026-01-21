@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Use Backend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            border-bottom: 1px solid #1a252f;
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .new-session-btn {
+            width: 100%;
+            padding: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .new-session-btn:hover {
+            background: #2980b9;
+        }
+
+        .sessions-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .session-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #34495e;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .session-item:hover {
+            background: #3d566e;
+        }
+
+        .session-item.active {
+            background: #3498db;
+        }
+
+        .session-item-id {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .session-item-time {
+            font-size: 11px;
+            opacity: 0.6;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .chat-header h2 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .chat-header .session-info {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-role {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #7f8c8d;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #3498db;
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #2c3e50;
+            border: 1px solid #ecf0f1;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #ecf0f1;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .send-btn:hover {
+            background: #2980b9;
+        }
+
+        .send-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #95a5a6;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-subtext {
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #95a5a6;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 20px;
+        }
+
+        .worker-status {
+            padding: 8px 12px;
+            background: #2ecc71;
+            color: white;
+            border-radius: 5px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .worker-status.initializing {
+            background: #f39c12;
+        }
+
+        .worker-status.error {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>💻 Computer Use</h1>
+                <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
+            </div>
+            <div class="sessions-list" id="sessionsList">
+                <div class="loading">Loading sessions...</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="chat-header">
+                <h2 id="chatTitle">Select or create a session</h2>
+                <div class="session-info" id="sessionInfo"></div>
+            </div>
+            <div class="messages-container" id="messagesContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">💬</div>
+                    <div class="empty-state-text">No session selected</div>
+                    <div class="empty-state-subtext">Create a new session or select an existing one</div>
+                </div>
+            </div>
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="Type your message..." 
+                    disabled
+                    onkeypress="handleKeyPress(event)"
+                />
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let currentSessionId = null;
+        let sessions = [];
+        let messages = [];
+        let pollingInterval = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSessions();
+            // Refresh sessions every 5 seconds
+            setInterval(loadSessions, 5000);
+        });
+
+        // Load all sessions
+        async function loadSessions() {
+            try {
+                const response = await fetch(`${API_BASE}/sessions/`);
+                sessions = await response.json();
+                renderSessions();
+            } catch (error) {
+                console.error('Failed to load sessions:', error);
+                document.getElementById('sessionsList').innerHTML = 
+                    '<div class="error">Failed to load sessions</div>';
+            }
+        }
+
+        // Render sessions list
+        function renderSessions() {
+            const container = document.getElementById('sessionsList');
+            if (sessions.length === 0) {
+                container.innerHTML = '<div class="loading">No sessions yet</div>';
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => `
+                <div class="session-item ${session.session_id === currentSessionId ? 'active' : ''}" 
+                     onclick="selectSession('${session.session_id}')">
+                    <div class="session-item-id">Session: ${session.session_id.substring(0, 8)}...</div>
+                    <div class="session-item-time">${new Date(session.created_at).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        // Create new session
+        async function createNewSession() {
+            try {
+                const response = await fetch(`${API_BASE}/sessions/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_metadata: {} })
+                });
+                const session = await response.json();
+                await loadSessions();
+                selectSession(session.session_id);
+            } catch (error) {
+                console.error('Failed to create session:', error);
+                alert('Failed to create session');
+            }
+        }
+
+        // Select a session
+        async function selectSession(sessionId) {
+            currentSessionId = sessionId;
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            
+            // Update UI
+            document.getElementById('chatTitle').textContent = `Session: ${sessionId.substring(0, 8)}...`;
+            document.getElementById('sessionInfo').innerHTML = `
+                <span>Session ID: ${sessionId}</span>
+                <span class="worker-status initializing">Loading...</span>
+            `;
+            
+            renderSessions();
+            await loadMessages();
+            
+            // Check worker status
+            checkWorkerStatus();
+        }
+
+        // Load messages for current session
+        async function loadMessages() {
+            if (!currentSessionId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/sessions/${currentSessionId}/messages`);
+                messages = await response.json();
+                renderMessages();
+            } catch (error) {
+                console.error('Failed to load messages:', error);
+            }
+        }
+
+        // Render messages
+        function renderMessages() {
+            const container = document.getElementById('messagesContainer');
+            
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👋</div>
+                        <div class="empty-state-text">Start a conversation</div>
+                        <div class="empty-state-subtext">Send a message to the Computer Use Agent</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => `
+                <div class="message ${msg.role}">
+                    <div class="message-role">${msg.role.toUpperCase()}</div>
+                    <div class="message-content">${escapeHtml(msg.content)}</div>
+                    <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+                </div>
+            `).join('');
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Send message
+        async function sendMessage() {
+            if (!currentSessionId) return;
+
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (!content) return;
+
+            // Disable input while sending
+            input.disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/sessions/${currentSessionId}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, role: 'user' })
+                });
+
+                if (response.ok) {
+                    input.value = '';
+                    await loadMessages();
+                    
+                    // Poll for agent response
+                    startPollingMessages();
+                } else {
+                    alert('Failed to send message');
+                }
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                alert('Failed to send message');
+            } finally {
+                input.disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+                input.focus();
+            }
+        }
+
+        // Start polling for new messages
+        function startPollingMessages() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            
+            pollingInterval = setInterval(async () => {
+                await loadMessages();
+            }, 2000);
+
+            // Stop polling after 30 seconds
+            setTimeout(() => {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = null;
+                }
+            }, 30000);
+        }
+
+        // Check worker status
+        async function checkWorkerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/sessions/workers/health`);
+                const data = await response.json();
+                
+                const worker = data.workers[currentSessionId];
+                const statusEl = document.querySelector('.worker-status');
+                
+                if (worker) {
+                    statusEl.textContent = `Worker: ${worker.status}`;
+                    statusEl.className = `worker-status ${worker.status}`;
+                } else {
+                    statusEl.textContent = 'No worker';
+                    statusEl.className = 'worker-status';
+                }
+            } catch (error) {
+                console.error('Failed to check worker status:', error);
+            }
+        }
+
+        // Handle Enter key
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# file: /Users/mickiepk/claude-quickstarts/computer-use-demo/computer_use_backend/logging_config.py
+# hypothesis_version: 6.150.2
+
+[1000, '%(message)s', 'DEBUG', 'Database operation', 'HTTP request', 'INFO', 'Worker event', 'database', 'http', 'iso', 'worker']

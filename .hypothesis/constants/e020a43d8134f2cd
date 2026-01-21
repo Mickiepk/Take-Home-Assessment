@@ -1,0 +1,4 @@
+# file: /Users/mickiepk/claude-quickstarts/computer-use-demo/computer_use_backend/models/database.py
+# hypothesis_version: 6.150.2
+
+[255, 'CASCADE', 'Message', 'Session', 'active', 'all, delete-orphan', 'messages', 'session', 'sessions', 'sessions.session_id']

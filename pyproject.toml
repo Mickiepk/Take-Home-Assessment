@@ -1,0 +1,89 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "computer-use-backend"
+version = "0.1.0"
+description = "Scalable FastAPI backend for Computer Use Demo with concurrent session support"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # FastAPI and web framework
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "websockets>=12.0",
+    
+    # Database
+    "sqlalchemy>=2.0.0",
+    "asyncpg>=0.29.0",
+    "aiosqlite>=0.19.0",
+    "alembic>=1.12.0",
+    
+    # HTTP client for agent
+    "httpx>=0.25.0",
+    "anthropic>=0.34.0",
+    
+    # Async and concurrency
+    "asyncio-mqtt>=0.16.0",
+    "aiofiles>=23.2.1",
+    
+    # Data validation and serialization
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    
+    # VNC and desktop
+    "pillow>=10.1.0",
+    
+    # Logging and monitoring
+    "structlog>=23.2.0",
+    "prometheus-client>=0.19.0",
+    
+    # Utilities
+    "python-multipart>=0.0.6",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "uuid>=1.30",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "hypothesis>=6.88.0",
+    "httpx>=0.25.0",
+    
+    # Development tools
+    "black>=23.9.0",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+    "mypy>=1.6.0",
+    
+    # Documentation
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=computer_use_backend --cov-report=term-missing"

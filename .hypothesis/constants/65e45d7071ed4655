@@ -1,0 +1,4 @@
+# file: /Users/mickiepk/claude-quickstarts/computer-use-demo/computer_use_backend/config.py
+# hypothesis_version: 6.150.2
+
+[100, 300, 1024, 3600, 4096, 5900, 8000, '.env', '0.0.0.0', 'Allowed CORS origins', 'Anthropic API key', 'Debug mode', 'Default Claude model', 'INFO', 'Logging level', 'Server host', 'Server port', 'utf-8']

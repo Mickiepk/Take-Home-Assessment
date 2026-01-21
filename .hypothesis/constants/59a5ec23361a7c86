@@ -1,0 +1,4 @@
+# file: /Users/mickiepk/claude-quickstarts/computer-use-demo/computer_use_backend/models/schemas.py
+# hypothesis_version: 6.150.2
+
+[1024, 'active', 'assistant', 'complete', 'error', 'idle', 'message_id', 'processing', 'screenshot', 'session_id', 'terminated', 'thinking', 'tool', 'tool_result', 'tool_use', 'user']

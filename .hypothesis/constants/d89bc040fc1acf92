@@ -1,0 +1,4 @@
+# file: /Users/mickiepk/claude-quickstarts/computer-use-demo/computer_use_backend/routers/health.py
+# hypothesis_version: 6.150.2
+
+['/', '/detailed', 'SELECT 1', 'components', 'computer-use-backend', 'database', 'degraded', 'error', 'healthy', 'service', 'status', 'unavailable', 'unhealthy']
