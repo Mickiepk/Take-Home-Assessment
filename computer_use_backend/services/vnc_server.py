@@ -12,13 +12,11 @@ from ..logging_config import get_logger
 
 logger = get_logger(__name__)
 
-
 class VNCServer:
     """
     Manages a VNC server instance for a session.
     Provides remote desktop access to the Computer Use Agent's environment.
     """
-    
     def __init__(self, session_id: str, display_num: int):
         self.session_id = session_id
         self.display_num = display_num

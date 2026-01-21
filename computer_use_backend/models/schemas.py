@@ -9,7 +9,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_serializer
 
-
 class SessionStatus(str, Enum):
     """Session status enumeration."""
     ACTIVE = "active"
@@ -17,13 +16,11 @@ class SessionStatus(str, Enum):
     IDLE = "idle"
     TERMINATED = "terminated"
 
-
 class MessageRole(str, Enum):
     """Message role enumeration."""
     USER = "user"
     ASSISTANT = "assistant"
     TOOL = "tool"
-
 
 class UpdateType(str, Enum):
     """Agent update type enumeration."""
@@ -34,19 +31,16 @@ class UpdateType(str, Enum):
     ERROR = "error"
     COMPLETE = "complete"
 
-
 # Request schemas
 class SessionCreate(BaseModel):
     """Schema for creating a new session."""
     session_metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
-
 
 class MessageCreate(BaseModel):
     """Schema for creating a new message."""
     content: str = Field(..., max_length=1024*1024)  # 1MB limit
     role: MessageRole = MessageRole.USER
     message_metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
-
 
 # Response schemas
 class SessionResponse(BaseModel):
@@ -66,7 +60,6 @@ class SessionResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class MessageResponse(BaseModel):
     """Schema for message response."""
     message_id: UUID
@@ -83,14 +76,12 @@ class MessageResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class AgentUpdate(BaseModel):
     """Schema for agent execution updates."""
     update_type: UpdateType
     content: str
     timestamp: datetime
     metadata: Dict[str, Any] = Field(default_factory=dict)
-
 
 class HealthResponse(BaseModel):
     """Schema for health check response."""

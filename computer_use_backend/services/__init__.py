@@ -9,14 +9,12 @@ from .worker import WorkerPool
 _stream_handler: StreamHandler | None = None
 _worker_pool: WorkerPool | None = None
 
-
 def get_shared_stream_handler() -> StreamHandler:
     """Get the shared StreamHandler instance."""
     global _stream_handler
     if _stream_handler is None:
         _stream_handler = StreamHandler()
     return _stream_handler
-
 
 def get_shared_worker_pool() -> WorkerPool:
     """Get the shared WorkerPool instance."""

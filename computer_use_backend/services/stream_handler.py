@@ -12,7 +12,6 @@ from ..logging_config import get_logger
 
 logger = get_logger(__name__)
 
-
 class StreamHandler:
     """
     Manages WebSocket connections and broadcasts agent updates to connected clients.
@@ -25,13 +24,7 @@ class StreamHandler:
         logger.info("StreamHandler initialized")
     
     async def register_client(self, session_id: str, websocket: WebSocket) -> None:
-        """
-        Register a WebSocket client for a session.
         
-        Args:
-            session_id: The session ID
-            websocket: The WebSocket connection
-        """
         async with self._lock:
             if session_id not in self.connections:
                 self.connections[session_id] = set()
@@ -42,13 +35,7 @@ class StreamHandler:
                        total_clients=len(self.connections[session_id]))
     
     async def unregister_client(self, session_id: str, websocket: WebSocket) -> None:
-        """
-        Unregister a WebSocket client from a session.
         
-        Args:
-            session_id: The session ID
-            websocket: The WebSocket connection
-        """
         async with self._lock:
             if session_id in self.connections:
                 self.connections[session_id].discard(websocket)
@@ -62,13 +49,6 @@ class StreamHandler:
                            remaining_clients=len(self.connections.get(session_id, [])))
     
     async def broadcast_update(self, session_id: str, update: AgentUpdate) -> None:
-        """
-        Broadcast an agent update to all connected clients for a session.
-        
-        Args:
-            session_id: The session ID
-            update: The agent update to broadcast
-        """
         if session_id not in self.connections:
             # No clients connected, skip broadcasting
             return
@@ -105,14 +85,7 @@ class StreamHandler:
                         self.connections[session_id].discard(websocket)
     
     async def send_status(self, session_id: str, status: str, message: str) -> None:
-        """
-        Send a status update to all connected clients.
         
-        Args:
-            session_id: The session ID
-            status: Status string (e.g., "processing", "complete")
-            message: Status message
-        """
         update = AgentUpdate(
             update_type=UpdateType.THINKING,
             content=message,
@@ -122,13 +95,7 @@ class StreamHandler:
         await self.broadcast_update(session_id, update)
     
     async def send_error(self, session_id: str, error_message: str) -> None:
-        """
-        Send an error update to all connected clients.
         
-        Args:
-            session_id: The session ID
-            error_message: Error message
-        """
         update = AgentUpdate(
             update_type=UpdateType.ERROR,
             content=error_message,
@@ -138,15 +105,7 @@ class StreamHandler:
         await self.broadcast_update(session_id, update)
     
     def get_client_count(self, session_id: str) -> int:
-        """
-        Get the number of connected clients for a session.
         
-        Args:
-            session_id: The session ID
-            
-        Returns:
-            int: Number of connected clients
-        """
         return len(self.connections.get(session_id, []))
     
     def get_total_connections(self) -> int:

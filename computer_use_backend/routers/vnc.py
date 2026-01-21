@@ -11,7 +11,6 @@ from ..logging_config import get_logger
 router = APIRouter()
 logger = get_logger(__name__)
 
-
 @router.get("/{session_id}/info")
 async def get_vnc_info(session_id: str):
     """
@@ -43,7 +42,6 @@ async def get_vnc_info(session_id: str):
         "health": health
     }
 
-
 @router.websocket("/{session_id}/stream")
 async def vnc_websocket_proxy(websocket: WebSocket, session_id: str):
     """
@@ -61,7 +59,6 @@ async def vnc_websocket_proxy(websocket: WebSocket, session_id: str):
         return
     
     try:
-        # TODO: Implement VNC protocol proxying
         # This would require:
         # 1. Connect to the VNC server (localhost:vnc_port)
         # 2. Proxy RFB protocol between WebSocket and VNC server

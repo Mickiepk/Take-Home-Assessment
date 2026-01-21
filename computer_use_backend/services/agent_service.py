@@ -27,7 +27,6 @@ from ..logging_config import get_logger
 
 logger = get_logger(__name__)
 
-
 class AgentService:
     """
     Service that wraps the original Computer Use Agent and provides
@@ -68,16 +67,7 @@ class AgentService:
         message_content: str,
         message_role: MessageRole = MessageRole.USER
     ) -> AsyncIterator[AgentUpdate]:
-        """
-        Process a message using the Computer Use Agent and yield real-time updates.
         
-        Args:
-            message_content: The message content to process
-            message_role: The role of the message (user/assistant/tool)
-            
-        Yields:
-            AgentUpdate: Real-time updates from agent execution
-        """
         try:
             # Add the user message to the conversation history
             self.messages.append({
@@ -230,7 +220,6 @@ class AgentService:
                 timestamp=datetime.utcnow(),
                 metadata={"session_id": self.session_id, "error": str(e)}
             )
-    
     def _content_block_to_update(self, content_block: BetaContentBlockParam) -> Optional[AgentUpdate]:
         """Convert a content block from the agent to an AgentUpdate."""
         try:

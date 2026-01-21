@@ -12,12 +12,10 @@ from ..logging_config import get_logger
 router = APIRouter()
 logger = get_logger(__name__)
 
-
 @router.get("/")
 async def health_check() -> Dict[str, str]:
     """Basic health check endpoint."""
     return {"status": "healthy", "service": "computer-use-backend"}
-
 
 @router.get("/detailed")
 async def detailed_health_check() -> Dict[str, Any]:

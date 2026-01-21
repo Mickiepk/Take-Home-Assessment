@@ -14,7 +14,6 @@ from sqlalchemy.sql import func
 
 Base = declarative_base()
 
-
 class Session(Base):
     """Session model for storing session information."""
     
@@ -52,7 +51,6 @@ class Session(Base):
     
     def __repr__(self) -> str:
         return f"<Session(session_id={self.session_id}, status={self.status})>"
-
 
 class Message(Base):
     """Message model for storing conversation messages."""

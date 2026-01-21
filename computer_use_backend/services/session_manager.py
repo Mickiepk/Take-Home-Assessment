@@ -15,7 +15,6 @@ from .worker import WorkerPool
 
 logger = get_logger(__name__)
 
-
 class SessionManager:
     """Manages session lifecycle and operations with worker integration."""
     
@@ -146,7 +145,7 @@ class SessionManager:
             raise
     
     async def get_or_create_worker(self, session_id: str):
-        """Get existing worker or create a new one for the session."""
+        
         try:
             # Try to get existing worker
             worker = await self.worker_pool.get_worker(session_id)
@@ -176,7 +175,6 @@ class SessionManager:
             
             # Terminate the worker if it exists
             await self.worker_pool.terminate_worker(session_id)
-            
             # Update session status
             session.status = "terminated"
             await db.commit()

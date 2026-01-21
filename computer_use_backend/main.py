@@ -17,7 +17,6 @@ from .database import init_database
 from .logging_config import setup_logging
 from .routers import sessions, health, websocket, vnc
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
@@ -35,7 +34,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
     
     logger.info("Computer Use Backend shutting down...")
-
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
@@ -79,10 +77,8 @@ def create_app() -> FastAPI:
     
     return app
 
-
 # Create the app instance
 app = create_app()
-
 
 if __name__ == "__main__":
     import uvicorn

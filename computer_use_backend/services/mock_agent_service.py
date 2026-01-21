@@ -11,7 +11,6 @@ from ..logging_config import get_logger
 
 logger = get_logger(__name__)
 
-
 class MockAgentService:
     """
     Mock agent service that simulates Computer Use Agent responses
@@ -172,7 +171,6 @@ class MockAgentService:
             if "dubai" in message_lower:
                 return "The weather in Dubai is currently sunny with a temperature of 28°C (82°F). It's a typical warm day with clear skies and low humidity."
             return "I can check the weather for you. The current conditions show clear skies with moderate temperatures."
-        
         # Files/directory
         if any(word in message_lower for word in ["file", "list", "directory", "ls"]):
             return "Here are the files in the current directory:\n- computer_use_backend/\n- computer_use_demo/\n- docker-compose.yml\n- README.md\n- requirements.txt\n\nTotal: 15 files and 5 directories."
@@ -187,7 +185,6 @@ class MockAgentService:
     def get_conversation_history(self):
         """Get the conversation history."""
         return self.messages
-    
     def clear_history(self):
         """Clear the conversation history."""
         self.messages = []

@@ -14,7 +14,6 @@ logger = get_logger(__name__)
 engine = None
 async_session_maker = None
 
-
 async def init_database() -> None:
     """Initialize database connection and create tables."""
     global engine, async_session_maker
@@ -53,8 +52,6 @@ async def init_database() -> None:
         # Set to None so we can detect this in the dependency
         engine = None
         async_session_maker = None
-
-
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency to get database session."""
     if async_session_maker is None:

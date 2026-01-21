@@ -14,12 +14,10 @@ from ..logging_config import get_logger
 router = APIRouter()
 logger = get_logger(__name__)
 
-
 def get_worker_pool() -> WorkerPool:
     """Get shared worker pool instance."""
     from ..services import get_shared_worker_pool
     return get_shared_worker_pool()
-
 
 @router.websocket("/{session_id}/stream")
 async def websocket_stream(

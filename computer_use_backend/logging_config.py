@@ -8,7 +8,6 @@ from typing import Any, Dict
 
 import structlog
 
-
 def setup_logging(log_level: str = "INFO") -> None:
     """Setup structured logging configuration."""
     
@@ -40,11 +39,9 @@ def setup_logging(log_level: str = "INFO") -> None:
         cache_logger_on_first_use=True,
     )
 
-
 def get_logger(name: str) -> structlog.BoundLogger:
     """Get a structured logger instance."""
     return structlog.get_logger(name)
-
 
 def log_request(
     method: str,
@@ -64,7 +61,6 @@ def log_request(
         **kwargs
     )
 
-
 def log_worker_event(
     session_id: str,
     event: str,
@@ -78,7 +74,6 @@ def log_worker_event(
         event=event,
         **kwargs
     )
-
 
 def log_database_event(
     operation: str,
