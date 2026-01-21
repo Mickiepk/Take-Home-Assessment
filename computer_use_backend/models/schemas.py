@@ -89,7 +89,7 @@ class AgentUpdate(BaseModel):
     update_type: UpdateType
     content: str
     timestamp: datetime
-    update_metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class HealthResponse(BaseModel):

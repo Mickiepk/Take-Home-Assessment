@@ -4,12 +4,16 @@ Worker implementation for handling Computer Use Agent execution.
 
 import asyncio
 import uuid
+import os
 from typing import Optional, Dict, Any, AsyncIterator
 from datetime import datetime
 
 from ..models.schemas import AgentUpdate, UpdateType
 from ..logging_config import get_logger
+from ..config import get_settings
 from .agent_service import AgentService
+from .mock_agent_service import MockAgentService
+from .vnc_server import VNCServer
 
 logger = get_logger(__name__)
 
@@ -24,11 +28,13 @@ class Worker:
         self.worker_id = str(uuid.uuid4())
         self.created_at = datetime.utcnow()
         self.status = "initializing"
+        self.settings = get_settings()
         
-        # VM and VNC will be implemented in Task 7
+        # VM and VNC components
         self.vm_instance: Optional["VMInstance"] = None
-        self.vnc_server: Optional["VNCServer"] = None
+        self.vnc_server: Optional[VNCServer] = None
         self.vnc_port: Optional[int] = None
+        self.display_num: int = self.settings.display_num + hash(session_id) % 100
         
         # Agent service for Computer Use Agent integration
         self.agent_service: Optional[AgentService] = None
@@ -146,35 +152,74 @@ class Worker:
     
     async def _initialize_vnc(self) -> None:
         """Initialize VNC server for the session."""
-        # TODO: Implement in Task 7.1
-        logger.info("VNC initialization placeholder", worker_id=self.worker_id)
-        await asyncio.sleep(0.1)  # Simulate initialization time
-        # Simulate VNC port assignment
-        self.vnc_port = 5900 + hash(self.session_id) % 1000
+        try:
+            logger.info("Initializing VNC server", worker_id=self.worker_id)
+            
+            # Create and start VNC server
+            self.vnc_server = VNCServer(self.session_id, self.display_num)
+            await self.vnc_server.start()
+            
+            self.vnc_port = self.vnc_server.vnc_port
+            
+            # Set DISPLAY environment variable for the agent
+            os.environ["DISPLAY"] = self.vnc_server.get_display()
+            
+            logger.info("VNC server initialized successfully",
+                       worker_id=self.worker_id,
+                       vnc_port=self.vnc_port,
+                       display=self.vnc_server.get_display())
+            
+        except Exception as e:
+            logger.warning("VNC initialization failed (continuing without VNC)",
+                         worker_id=self.worker_id,
+                         error=str(e))
+            # Don't fail worker initialization if VNC fails
+            # The agent can still work without VNC
+            self.vnc_server = None
+            self.vnc_port = None
     
     async def _initialize_agent(self) -> None:
         """Initialize Computer Use Agent components."""
         try:
             logger.info("Initializing Computer Use Agent", worker_id=self.worker_id)
             
-            # Create the agent service with the real Computer Use Agent
-            self.agent_service = AgentService(self.session_id)
+            # Check if API key is set
+            api_key = self.settings.anthropic_api_key
+            use_mock = not api_key or api_key == "your_anthropic_api_key_here" or api_key == ""
             
-            logger.info("Computer Use Agent initialized successfully", 
+            if use_mock:
+                logger.warning("No valid API key found - using Mock Agent for demo", 
+                             worker_id=self.worker_id)
+                # Use mock agent (no API key required)
+                self.agent_service = MockAgentService(self.session_id)
+            else:
+                # Use real Computer Use Agent
+                self.agent_service = AgentService(self.session_id)
+            
+            logger.info("Agent initialized successfully", 
                        worker_id=self.worker_id,
-                       session_id=self.session_id)
+                       session_id=self.session_id,
+                       agent_type="mock" if use_mock else "real")
             
         except Exception as e:
-            logger.error("Failed to initialize Computer Use Agent", 
+            logger.error("Failed to initialize Agent", 
                         worker_id=self.worker_id,
                         error=str(e))
             raise
     
     async def _cleanup_vnc(self) -> None:
         """Cleanup VNC server resources."""
-        # TODO: Implement in Task 7.1
-        logger.info("VNC cleanup placeholder", worker_id=self.worker_id)
-        await asyncio.sleep(0.1)  # Simulate cleanup time
+        if self.vnc_server:
+            try:
+                logger.info("Cleaning up VNC server", worker_id=self.worker_id)
+                await self.vnc_server.stop()
+                self.vnc_server = None
+                self.vnc_port = None
+                logger.info("VNC server cleaned up", worker_id=self.worker_id)
+            except Exception as e:
+                logger.error("Failed to cleanup VNC server",
+                           worker_id=self.worker_id,
+                           error=str(e))
     
     async def _cleanup_vm(self) -> None:
         """Cleanup VM instance resources."""

@@ -166,9 +166,15 @@ async def create_message(
                     async for update in worker.process_message(message_data.content):
                         await stream_handler.broadcast_update(session_id, update)
                         
-                        # Collect text responses for saving
-                        if update.update_type in [UpdateType.THINKING, UpdateType.COMPLETE]:
-                            if update.content:
+                        # Only collect the actual answer (skip status messages)
+                        if update.update_type == UpdateType.THINKING:
+                            # Skip generic status messages
+                            if update.content and not any(skip in update.content.lower() for skip in [
+                                "analyzing your request",
+                                "processing your message",
+                                "starting to process",
+                                "processing completed"
+                            ]):
                                 agent_response_parts.append(update.content)
                     
                     # Save agent response to database

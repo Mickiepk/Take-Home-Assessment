@@ -75,7 +75,7 @@
 - [ ] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement WebSocket streaming functionality
+- [x] 6. Implement WebSocket streaming functionality
   - [x] 6.1 Create WebSocket handler and streaming infrastructure
     - Implement WebSocket endpoint for /sessions/{id}/stream
     - Create StreamHandler class for managing WebSocket connections
@@ -92,14 +92,14 @@
     - **Property 4: WebSocket streaming behavior**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.5**
 
-- [ ] 7. Implement VNC server integration
-  - [ ] 7.1 Create VNC server management
+- [x] 7. Implement VNC server integration
+  - [x] 7.1 Create VNC server management
     - Implement VNCServer class for per-session VNC instances
     - Create VNC proxy endpoint for desktop access
     - Implement VNC resource cleanup on session termination
     - _Requirements: 5.1, 5.2, 5.5_
 
-  - [ ] 7.2 Integrate VNC with worker instances
+  - [x] 7.2 Integrate VNC with worker instances
     - Connect VNC servers to VM instances
     - Support concurrent VNC connections per session
     - Implement VNC data streaming to clients
@@ -139,14 +139,14 @@
     - **Property 8: System monitoring and logging**
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4**
 
-- [ ] 10. Create Docker deployment configuration
-  - [ ] 10.1 Create production Docker setup
+- [x] 10. Create Docker deployment configuration
+  - [x] 10.1 Create production Docker setup
     - Write Dockerfile for the FastAPI backend
     - Create docker-compose.yml with all services (backend, database, VNC)
     - Configure environment variables and secrets management
     - _Requirements: 1.1, 1.5_
 
-  - [ ] 10.2 Implement VM and Firefox instance management
+  - [x] 10.2 Implement VM and Firefox instance management
     - Configure Docker containers for isolated VM instances
     - Set up Firefox browser instances per session
     - Implement proper resource allocation and cleanup

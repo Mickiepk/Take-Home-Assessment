@@ -2,6 +2,7 @@ services:
   # PostgreSQL database
   postgres:
     image: postgres:15-alpine
+    container_name: computer-use-postgres
     environment:
       POSTGRES_DB: computer_use_backend
       POSTGRES_USER: postgres
@@ -10,44 +11,102 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - computer-use-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # FastAPI backend
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: computer-use-backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/computer_use_backend
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Server settings
+      HOST: 0.0.0.0
+      PORT: 8000
       DEBUG: ${DEBUG:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # Database
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/computer_use_backend
+      
+      # Agent settings
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-claude-sonnet-4-5-20250929}
+      MAX_TOKENS: ${MAX_TOKENS:-4096}
+      
+      # Display settings for VNC
+      WIDTH: ${WIDTH:-1024}
+      HEIGHT: ${HEIGHT:-768}
+      DISPLAY_NUM: ${DISPLAY_NUM:-1}
+      
+      # Worker settings
+      MAX_CONCURRENT_SESSIONS: ${MAX_CONCURRENT_SESSIONS:-100}
+      WORKER_TIMEOUT: ${WORKER_TIMEOUT:-300}
+      
+      # VNC settings
+      VNC_BASE_PORT: ${VNC_BASE_PORT:-5900}
+      VNC_DISPLAY_BASE: ${VNC_DISPLAY_BASE:-1}
+      
+      # CORS
+      ALLOWED_ORIGINS: '["http://localhost:3000","http://localhost:8080","http://localhost:8000"]'
+    
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
+      # VNC ports range
+      - "5900-5910:5900-5910"
+    
     depends_on:
       postgres:
         condition: service_healthy
+    
     volumes:
+      # Mount code for development (comment out for production)
       - ./computer_use_backend:/app/computer_use_backend
+      - ./computer_use_demo:/app/computer_use_demo
+      # Shared X11 socket for VNC
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    
+    networks:
+      - computer-use-network
+    
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    
+    restart: unless-stopped
+    
+    # Increase shared memory for browser/desktop operations
+    shm_size: 2gb
 
-  # Redis for session state (optional, for future use)
+  # Redis for caching (optional, for future scaling)
   redis:
     image: redis:7-alpine
+    container_name: computer-use-redis
     ports:
       - "6379:6379"
+    networks:
+      - computer-use-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+networks:
+  computer-use-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+    driver: local

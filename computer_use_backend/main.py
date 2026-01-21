@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 from .config import get_settings
 from .database import init_database
 from .logging_config import setup_logging
-from .routers import sessions, health, websocket
+from .routers import sessions, health, websocket, vnc
 
 
 @asynccontextmanager
@@ -61,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/health", tags=["health"])
     app.include_router(sessions.router, prefix="/sessions", tags=["sessions"])
     app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
+    app.include_router(vnc.router, prefix="/vnc", tags=["vnc"])
     
     # Serve static files
     static_dir = Path(__file__).parent / "static"

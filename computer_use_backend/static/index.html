@@ -72,6 +72,9 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .session-item:hover {
@@ -80,6 +83,10 @@
 
         .session-item.active {
             background: #3498db;
+        }
+
+        .session-item-content {
+            flex: 1;
         }
 
         .session-item-id {
@@ -91,6 +98,31 @@
         .session-item-time {
             font-size: 11px;
             opacity: 0.6;
+        }
+
+        .session-item-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .delete-session-btn {
+            padding: 4px 8px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+
+        .delete-session-btn:hover {
+            background: #c0392b;
+        }
+
+        .delete-session-btn:active {
+            transform: scale(0.95);
         }
 
         /* Main Content */
@@ -310,10 +342,13 @@
 
     <script>
         const API_BASE = window.location.origin;
+        const WS_BASE = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
         let currentSessionId = null;
         let sessions = [];
         let messages = [];
-        let pollingInterval = null;
+        let websocket = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -344,10 +379,16 @@
             }
 
             container.innerHTML = sessions.map(session => `
-                <div class="session-item ${session.session_id === currentSessionId ? 'active' : ''}" 
-                     onclick="selectSession('${session.session_id}')">
-                    <div class="session-item-id">Session: ${session.session_id.substring(0, 8)}...</div>
-                    <div class="session-item-time">${new Date(session.created_at).toLocaleString()}</div>
+                <div class="session-item ${session.session_id === currentSessionId ? 'active' : ''}">
+                    <div class="session-item-content" onclick="selectSession('${session.session_id}')">
+                        <div class="session-item-id">Session: ${session.session_id.substring(0, 8)}...</div>
+                        <div class="session-item-time">${new Date(session.created_at).toLocaleString()}</div>
+                    </div>
+                    <div class="session-item-actions">
+                        <button class="delete-session-btn" onclick="deleteSession('${session.session_id}', event)">
+                            🗑️ Delete
+                        </button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -369,6 +410,57 @@
             }
         }
 
+        // Delete a session
+        async function deleteSession(sessionId, event) {
+            // Prevent triggering selectSession
+            event.stopPropagation();
+            
+            // Confirm deletion
+            if (!confirm(`Delete session ${sessionId.substring(0, 8)}...?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/sessions/${sessionId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    console.log('Session deleted:', sessionId);
+                    
+                    // If we deleted the current session, clear the UI
+                    if (sessionId === currentSessionId) {
+                        currentSessionId = null;
+                        document.getElementById('messageInput').disabled = true;
+                        document.getElementById('sendBtn').disabled = true;
+                        document.getElementById('chatTitle').textContent = 'Select or create a session';
+                        document.getElementById('sessionInfo').innerHTML = '';
+                        document.getElementById('messagesContainer').innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">💬</div>
+                                <div class="empty-state-text">No session selected</div>
+                                <div class="empty-state-subtext">Create a new session or select an existing one</div>
+                            </div>
+                        `;
+                        
+                        // Close WebSocket if open
+                        if (websocket) {
+                            websocket.close();
+                            websocket = null;
+                        }
+                    }
+                    
+                    // Reload sessions list
+                    await loadSessions();
+                } else {
+                    alert('Failed to delete session');
+                }
+            } catch (error) {
+                console.error('Failed to delete session:', error);
+                alert('Failed to delete session');
+            }
+        }
+
         // Select a session
         async function selectSession(sessionId) {
             currentSessionId = sessionId;
@@ -379,14 +471,149 @@
             document.getElementById('chatTitle').textContent = `Session: ${sessionId.substring(0, 8)}...`;
             document.getElementById('sessionInfo').innerHTML = `
                 <span>Session ID: ${sessionId}</span>
-                <span class="worker-status initializing">Loading...</span>
+                <span class="worker-status initializing">Connecting...</span>
             `;
             
             renderSessions();
             await loadMessages();
             
+            // Connect to WebSocket for real-time updates
+            connectWebSocket(sessionId);
+            
             // Check worker status
             checkWorkerStatus();
+        }
+
+        // Connect to WebSocket for real-time streaming
+        function connectWebSocket(sessionId) {
+            // Close existing connection
+            if (websocket) {
+                websocket.close();
+            }
+
+            const wsUrl = `${WS_BASE}${window.location.host}/ws/${sessionId}/stream`;
+            console.log('Connecting to WebSocket:', wsUrl);
+
+            websocket = new WebSocket(wsUrl);
+
+            websocket.onopen = () => {
+                console.log('WebSocket connected');
+                reconnectAttempts = 0;
+                updateConnectionStatus('connected');
+            };
+
+            websocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+
+            websocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus('error');
+            };
+
+            websocket.onclose = () => {
+                console.log('WebSocket closed');
+                updateConnectionStatus('disconnected');
+                
+                // Attempt to reconnect
+                if (currentSessionId === sessionId && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    reconnectAttempts++;
+                    console.log(`Reconnecting... (attempt ${reconnectAttempts})`);
+                    setTimeout(() => connectWebSocket(sessionId), 2000 * reconnectAttempts);
+                }
+            };
+
+            // Send ping every 30 seconds to keep connection alive
+            setInterval(() => {
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send('ping');
+                }
+            }, 30000);
+        }
+
+        // Handle WebSocket messages
+        function handleWebSocketMessage(data) {
+            console.log('WebSocket message:', data);
+
+            if (data.type === 'connected') {
+                updateConnectionStatus('connected');
+                return;
+            }
+
+            if (data.type === 'pong') {
+                return;
+            }
+
+            if (data.type === 'agent_update') {
+                handleAgentUpdate(data);
+            }
+        }
+
+        // Handle agent updates
+        function handleAgentUpdate(update) {
+            const container = document.getElementById('messagesContainer');
+            
+            // Create or update a live update element
+            let liveUpdateEl = document.getElementById('live-update');
+            if (!liveUpdateEl) {
+                liveUpdateEl = document.createElement('div');
+                liveUpdateEl.id = 'live-update';
+                liveUpdateEl.className = 'message assistant';
+                liveUpdateEl.innerHTML = `
+                    <div class="message-role">ASSISTANT (LIVE)</div>
+                    <div class="message-content" id="live-update-content"></div>
+                    <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                `;
+                container.appendChild(liveUpdateEl);
+            }
+
+            const contentEl = document.getElementById('live-update-content');
+            
+            // Update content based on update type
+            if (update.update_type === 'thinking') {
+                contentEl.innerHTML += `<div>💭 ${escapeHtml(update.content)}</div>`;
+            } else if (update.update_type === 'tool_use') {
+                const toolName = update.metadata?.tool_name || 'unknown';
+                contentEl.innerHTML += `<div>🔧 Using tool: ${escapeHtml(toolName)}</div>`;
+            } else if (update.update_type === 'tool_result') {
+                contentEl.innerHTML += `<div>✅ ${escapeHtml(update.content)}</div>`;
+            } else if (update.update_type === 'error') {
+                contentEl.innerHTML += `<div style="color: #e74c3c;">❌ ${escapeHtml(update.content)}</div>`;
+            } else if (update.update_type === 'complete') {
+                // Mark as complete and reload messages
+                liveUpdateEl.querySelector('.message-role').textContent = 'ASSISTANT';
+                setTimeout(() => {
+                    loadMessages();
+                    if (liveUpdateEl) {
+                        liveUpdateEl.remove();
+                    }
+                }, 1000);
+            }
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Update connection status
+        function updateConnectionStatus(status) {
+            const statusEl = document.querySelector('.worker-status');
+            if (!statusEl) return;
+
+            if (status === 'connected') {
+                statusEl.textContent = 'Connected (Live)';
+                statusEl.className = 'worker-status';
+            } else if (status === 'disconnected') {
+                statusEl.textContent = 'Disconnected';
+                statusEl.className = 'worker-status error';
+            } else if (status === 'error') {
+                statusEl.textContent = 'Connection Error';
+                statusEl.className = 'worker-status error';
+            }
         }
 
         // Load messages for current session
@@ -453,8 +680,8 @@
                     input.value = '';
                     await loadMessages();
                     
-                    // Poll for agent response
-                    startPollingMessages();
+                    // WebSocket will handle real-time updates
+                    // No need for polling anymore!
                 } else {
                     alert('Failed to send message');
                 }
@@ -466,23 +693,6 @@
                 document.getElementById('sendBtn').disabled = false;
                 input.focus();
             }
-        }
-
-        // Start polling for new messages
-        function startPollingMessages() {
-            if (pollingInterval) clearInterval(pollingInterval);
-            
-            pollingInterval = setInterval(async () => {
-                await loadMessages();
-            }, 2000);
-
-            // Stop polling after 30 seconds
-            setTimeout(() => {
-                if (pollingInterval) {
-                    clearInterval(pollingInterval);
-                    pollingInterval = null;
-                }
-            }, 30000);
         }
 
         // Check worker status
