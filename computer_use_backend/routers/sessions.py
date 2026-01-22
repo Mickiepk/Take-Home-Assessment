@@ -132,15 +132,17 @@ async def create_message(
                     async for update in worker.process_message(message_data.content):
                         await stream_handler.broadcast_update(session_id, update)
                         
-                        # Only collect the actual answer (skip status messages)
+                        # Collect actual text responses from the agent
                         if update.update_type == UpdateType.THINKING:
-                            # Skip generic status messages
+                            # Skip generic status messages but keep actual responses
                             if update.content and not any(skip in update.content.lower() for skip in [
                                 "analyzing your request",
                                 "processing your message",
                                 "starting to process",
-                                "processing completed"
+                                "processing completed",
+                                "agent processing completed"
                             ]):
+                                # This is actual agent response text
                                 agent_response_parts.append(update.content)
                     
                     # Save agent response to database
