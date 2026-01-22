@@ -160,6 +160,12 @@ class MockAgentService:
         if "2+2" in message_lower or "2 + 2" in message_lower:
             return "The answer is 4. I calculated this using basic arithmetic."
         
+        if "5+3" in message_lower or "5 + 3" in message_lower:
+            return "The answer is 8. I calculated this using basic arithmetic."
+        
+        if "10" in message_lower and "5" in message_lower and any(op in message_lower for op in ["*", "times", "multiply"]):
+            return "10 times 5 equals 50."
+        
         if "25" in message_lower and "4" in message_lower and any(op in message_lower for op in ["*", "times", "multiply"]):
             return "25 times 4 equals 100."
         
