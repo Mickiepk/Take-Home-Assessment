@@ -1,4 +1,6 @@
-# Computer Use Backend
+# Author Chayut Wisawabumrungchai
+
+## Computer Use Backend
 
 FastAPI backend for Anthropic Computer Use Demo with concurrent sessions and real-time agent execution.
 
